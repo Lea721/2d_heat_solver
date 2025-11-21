@@ -9,3 +9,10 @@ cd ~/2d_heat_solver && chmod +x scripts/*.sh && ./scripts/build_mpi.sh && ./scri
  cd ~/2d_heat_solver && chmod +x scripts/*.sh && ./scripts/build_mpi_nonblocking.sh && ./scripts/test_parallel_nonblocking.sh
  cd ~/2d_heat_solver/visualization
  python3 plot_results_mpi_nonblocking.py
+ 
+mpic++ -std=c++11 -O2 src/dirichletVSneuman.cpp src/heat_solver_mpi_nonblocking.cpp -o build/dirichletVSneuman
+mpirun -np 4 ./build/dirichletVSneuman dirichlet
+mpirun -np 4 ./build/dirichletVSneuman neumann
+cd visualization
+python3 analysis.py
+python3 visual_check.py
