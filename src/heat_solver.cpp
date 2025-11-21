@@ -31,18 +31,29 @@ double HeatSolver2D::calculate_max_timestep() const {
     // Stability condition for explicit method
     return std::min(dx*dx, dy*dy) / (4.0 * alpha);
 }
-
+//f(x) = amplitude × exp( - (x - center)² / (2 × spread²) )
 void HeatSolver2D::initialize_gaussian(double center_x, double center_y, 
-                                     double amplitude, double spread) {
+                                       double amplitude, double spread) 
+{
+    // Scale spread relative to domain if it’s too small
+    double dx_min = std::min(dx, dy);
+    if (spread < dx_min * 2.0) {
+        spread = dx_min * 5.0;  // ensure Gaussian covers multiple grid points
+    }
+
+    // Find maximum value of Gaussian for scaling
+    double max_val = amplitude;
+
     for (int i = 0; i < ny; ++i) {
         double y = i * dy;
         for (int j = 0; j < nx; ++j) {
             double x = j * dx;
             double r2 = (x - center_x)*(x - center_x) + (y - center_y)*(y - center_y);
-            T_old[i][j] = amplitude * exp(-r2 / (2.0 * spread * spread));
+            T_old[i][j] = max_val * exp(-r2 / (2.0 * spread * spread));
         }
     }
 }
+
 
 void HeatSolver2D::initialize_uniform(double temperature) {
     for (int i = 0; i < ny; ++i) {
@@ -100,3 +111,5 @@ void HeatSolver2D::step() {
 void HeatSolver2D::swap_fields() {
     std::swap(T_old, T_new);
 }
+void HeatSolver2D::copy_old_to_new() { T_new = T_old; }
+

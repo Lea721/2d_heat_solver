@@ -46,8 +46,14 @@ int main() {
                        true); // true for Dirichlet BCs
     
     // Initialize with a hot spot in the center
-    solver.initialize_gaussian(0.5, 0.5, 1.0, 0.1);
-    
+    solver.initialize_gaussian(0.5, 0.5, 10.0, 0.1);
+    solver.copy_old_to_new(); // or T_new = T_old; i don't know if that's should be like that without it the initial values are 0 which is false
+
+    //debug 
+    //auto temp = solver.get_temperature();
+    //std::cout << "Center temperature: " << temp[ny/2][nx/2] << std::endl;
+    //std::cout << "Corner temperature: " << temp[0][0] << std::endl;
+
     // Save initial condition
     save_to_csv(solver.get_temperature(), "results/initial.csv", nx, ny);
     

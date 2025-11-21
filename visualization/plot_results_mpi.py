@@ -6,7 +6,7 @@ def load_csv(filename):
     """Load CSV file into numpy array"""
     return np.genfromtxt(filename, delimiter=',')
 
-def plot_heatmap(data, step, output_dir="plots"):  # ← KEEP THIS
+def plot_heatmap(data, step, output_dir="plots_parallel"):  # ← KEEP THIS
     """Create and save a heatmap plot"""
     os.makedirs(output_dir, exist_ok=True)
     
@@ -28,11 +28,11 @@ if __name__ == "__main__":
     
     # Plot initial condition
     try:
-        initial_data = load_csv("../results/initial.csv")  # ← CHANGED
+        initial_data = load_csv("../results/initial_parallel.csv")  # ← CHANGED
         plot_heatmap(initial_data, "initial")
         
         # Plot final result
-        final_data = load_csv("../results/final.csv")      # ← CHANGED
+        final_data = load_csv("../results/final_parallel.csv")      # ← CHANGED
         plot_heatmap(final_data, "final")
         
         print("Plots created successfully!")

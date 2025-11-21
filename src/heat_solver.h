@@ -27,12 +27,13 @@ public:
                  bool use_dirichlet = true);
     
     // Initialize temperature field
-    void initialize_gaussian(double center_x, double center_y, double amplitude, double spread);
+    void initialize_gaussian(double center_x, double center_y, 
+                         double amplitude = 1.0, double spread = 0.1);
     void initialize_uniform(double temperature);
     
     // Simulation step
     void step();
-    
+    void copy_old_to_new();
     // Getters
     const std::vector<std::vector<double>>& get_temperature() const { return T_new; }
     int get_nx() const { return nx; }
