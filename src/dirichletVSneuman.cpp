@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
-    // Test parameters
+    // Configuration
     const int global_nx = 100;
     const int global_ny = 100;
     const double Lx = 1.0;
@@ -85,13 +85,18 @@ int main(int argc, char* argv[]) {
     const double alpha = 0.01;
     const int num_steps = 500;
     
-    // Boundary conditions
-    const double left_temp = 100.0;
-    const double right_temp = 0.0;
-    const double top_temp = 50.0;
-    const double bottom_temp = 0.0;
+    // Parse command line arguments for boundary conditions
+    bool use_dirichlet = true; // Default to Dirichlet
+    if (argc > 1) {
+        std::string bc_type(argv[1]);
+        if (bc_type == "neumann") {
+            use_dirichlet = false;
+        }
+    }
     
-    // Create Cartesian communicator
+    // Boundary conditions
+    double left_bc = 100.0, right_bc = 0.0, top_bc = 50.0, bottom_bc = 0.0;
+    
     int dims[2] = {0, 0};
     MPI_Dims_create(size, 2, dims);
     int periods[2] = {0, 0};
@@ -104,30 +109,35 @@ int main(int argc, char* argv[]) {
     MPI_Cart_coords(cart_comm, rank, 2, coords);
     
     if (rank == 0) {
-        std::cout << "=== NON-BLOCKING MPI HEAT SOLVER ===" << std::endl;
+        std::cout << "=== PARALLEL 2D HEAT SOLVER ===" << std::endl;
         std::cout << "Process grid: " << dims[0] << " x " << dims[1] << std::endl;
         std::cout << "Global grid: " << global_nx << " x " << global_ny << std::endl;
         std::cout << "Time steps: " << num_steps << std::endl;
+        std::cout << "Boundary conditions: " << (use_dirichlet ? "Dirichlet" : "Neumann") << std::endl;
+        if (use_dirichlet) {
+            std::cout << "  Left: " << left_bc << "°C, Right: " << right_bc << "°C" << std::endl;
+            std::cout << "  Top: " << top_bc << "°C, Bottom: " << bottom_bc << "°C" << std::endl;
+        } else {
+            std::cout << "  All boundaries: Insulated (zero flux)" << std::endl;
+        }
     }
     
-    // Create distributed grid and solver
     DistributedGrid grid(global_nx, global_ny, dims[0], dims[1], coords[0], coords[1]);
-    MPIHeatSolver2D solver(grid, Lx, Ly, alpha, 
-                          left_temp, right_temp, top_temp, bottom_temp,
-                          true, cart_comm);
+    MPIHeatSolver2D solver(grid, Lx, Ly, alpha, left_bc, right_bc, top_bc, bottom_bc,
+                          use_dirichlet, cart_comm);
     
-    // Initialize
+    // Initialize with Gaussian hot spot
     solver.initialize_gaussian(0.5, 0.5, 200.0, 0.1);
     
-    // Time the non-blocking version
     MPI_Barrier(cart_comm);
     auto start_time = std::chrono::high_resolution_clock::now();
     
+    // Run simulation with non-blocking communication
     for (int step = 0; step < num_steps; ++step) {
         solver.step_nonblocking();
         
         if ((step + 1) % 100 == 0 && rank == 0) {
-            std::cout << "Non-blocking - Completed step " << (step + 1) << std::endl;
+            std::cout << "Completed step " << (step + 1) << std::endl;
         }
     }
     
@@ -135,11 +145,12 @@ int main(int argc, char* argv[]) {
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     
     if (rank == 0) {
-        std::cout << "Non-blocking simulation completed in " << duration.count() << " ms" << std::endl;
-        std::cout << "Saving results..." << std::endl;
+        std::cout << "Simulation completed in " << duration.count() << " ms" << std::endl;
     }
     
-    save_to_csv_parallel(grid, "results/final_nonblocking.csv", cart_comm);
+    // Save results
+    std::string filename = use_dirichlet ? "results/final_dirichlet.csv" : "results/final_neumann.csv";
+    save_to_csv_parallel(grid, filename, cart_comm);
     
     MPI_Comm_free(&cart_comm);
     MPI_Finalize();
