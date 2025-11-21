@@ -5,3 +5,7 @@ cd ~/2d_heat_solver/visualization
 cd ~/2d_heat_solver && chmod +x scripts/*.sh && ./scripts/build_mpi.sh && ./scripts/test_parallel.sh
  cd ~/2d_heat_solver/visualization
  python3 plot_results_mpi.py
+ 
+ cd ~/2d_heat_solver && chmod +x scripts/*.sh && ./scripts/build_mpi_nonblocking.sh && ./scripts/test_parallel_nonblocking.sh
+ cd ~/2d_heat_solver/visualization
+ python3 plot_results_mpi_nonblocking.py
