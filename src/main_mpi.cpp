@@ -5,6 +5,18 @@
 #include <chrono>
 #include <mpi.h>
 
+void debug_print_local_grid(const DistributedGrid& grid, int rank, const std::string& label) {
+    std::cout << "Rank " << rank << " " << label << " (local " << grid.local_nx << "x" << grid.local_ny << "):\n";
+    for (int i = 0; i < grid.allocated_ny; ++i) {
+        std::cout << "  ";
+        for (int j = 0; j < grid.allocated_nx; ++j) {
+            std::cout << std::fixed << std::setprecision(2) << grid.local_data[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << std::endl;
+}
+
 void save_to_csv_parallel(const DistributedGrid& grid, const std::string& filename, 
                          MPI_Comm comm, int root = 0) {
     int rank, size;
@@ -16,12 +28,12 @@ void save_to_csv_parallel(const DistributedGrid& grid, const std::string& filena
         std::vector<std::vector<double>> global_grid(grid.global_ny, 
                                                    std::vector<double>(grid.global_nx, 0.0));
         
-        // Root copies its own data
+        // Root copies its own data (interior points only, no halos)
         for (int i = 0; i < grid.local_ny; ++i) {
             for (int j = 0; j < grid.local_nx; ++j) {
                 int global_i = grid.start_y + i;
                 int global_j = grid.start_x + j;
-                global_grid[global_i][global_j] = grid.local_data[i][j];
+                global_grid[global_i][global_j] = grid.local_data[i + 1][j + 1];
             }
         }
         
@@ -62,17 +74,19 @@ void save_to_csv_parallel(const DistributedGrid& grid, const std::string& filena
             }
             file.close();
             std::cout << "Saved parallel results to " << filename << std::endl;
+        } else {
+            std::cerr << "Error: Could not open file " << filename << std::endl;
         }
     } else {
         // Send subdomain info to root
         int info[4] = {grid.start_x, grid.start_y, grid.local_nx, grid.local_ny};
         MPI_Send(info, 4, MPI_INT, root, 0, comm);
         
-        // Send local data to root
+        // Send local data to root (interior points only, no halos)
         std::vector<double> buffer(grid.local_nx * grid.local_ny);
         for (int i = 0; i < grid.local_ny; ++i) {
             for (int j = 0; j < grid.local_nx; ++j) {
-                buffer[i * grid.local_nx + j] = grid.local_data[i][j];
+                buffer[i * grid.local_nx + j] = grid.local_data[i + 1][j + 1];
             }
         }
         MPI_Send(buffer.data(), buffer.size(), MPI_DOUBLE, root, 1, comm);
@@ -87,20 +101,19 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
-    // Simulation parameters
-    const int global_nx = 100;        // Global grid points in x
-    const int global_ny = 100;        // Global grid points in y
-    const double Lx = 1.0;            // Domain length in x
-    const double Ly = 1.0;            // Domain length in y
-    const double alpha = 0.01;        // Thermal diffusivity
+    const int global_nx = 200;        // Global grid points in x
+    const int global_ny = 200;        // Global grid points in y
+    const double Lx = 1.0;           // Domain length in x
+    const double Ly = 1.0;           // Domain length in y
+    const double alpha = 0.01;       // Thermal diffusivity
     const int num_steps = 1000;       // Number of time steps
-    const int save_interval = 100;    // Save every N steps
+    const int save_interval = 50;    // Save every N steps
     
-    // Boundary conditions (applied to global domain)
-    const double left_temp = 0.0;
-    const double right_temp = 0.0;
-    const double top_temp = 0.0;
-    const double bottom_temp = 0.0;
+    // More interesting boundary conditions
+    const double left_temp = 100.0;   // Hot left wall
+    const double right_temp = 0.0;    // Cold right wall  
+    const double top_temp = 50.0;     // Warm top
+    const double bottom_temp = 0.0;   // Cold bottom
     
     // Create Cartesian communicator
     int dims[2] = {0, 0};
@@ -116,30 +129,36 @@ int main(int argc, char* argv[]) {
     MPI_Cart_coords(cart_comm, rank, 2, coords);
     
     if (rank == 0) {
-        std::cout << "Parallel 2D Heat Solver" << std::endl;
+        std::cout << "=== Parallel 2D Heat Solver ===" << std::endl;
         std::cout << "Process grid: " << dims[0] << " x " << dims[1] << std::endl;
         std::cout << "Global grid: " << global_nx << " x " << global_ny << std::endl;
         std::cout << "Running " << num_steps << " time steps" << std::endl;
+        std::cout << "Boundary conditions: L=" << left_temp << ", R=" << right_temp 
+                  << ", T=" << top_temp << ", B=" << bottom_temp << std::endl;
     }
     
     // Create distributed grid
     DistributedGrid grid(global_nx, global_ny, dims[0], dims[1], coords[0], coords[1]);
+    grid.print_info(rank);
     
     // Create MPI heat solver
     MPIHeatSolver2D solver(grid, Lx, Ly, alpha, 
                           left_temp, right_temp, top_temp, bottom_temp,
                           true, cart_comm);
     
-    // Initialize with a hot spot (all processes initialize their local part)
+    // Initialize with a hot spot
     if (rank == 0) {
         std::cout << "Initializing with Gaussian hot spot..." << std::endl;
     }
-    solver.initialize_gaussian(0.5, 0.5, 1.0, 0.1);
+    solver.initialize_gaussian(0.5, 0.5, 200.0, 0.1);
+    
+    // Debug: print initial state
+    // debug_print_local_grid(grid, rank, "Initial");
     
     // Synchronize before starting
     MPI_Barrier(cart_comm);
     
-    // Save initial condition (only root)
+    // Save initial condition
     if (rank == 0) {
         std::cout << "Saving initial condition..." << std::endl;
     }
@@ -167,9 +186,13 @@ int main(int argc, char* argv[]) {
     // Save final state
     save_to_csv_parallel(grid, "results/final_parallel.csv", cart_comm);
     
+    // Debug: print final state
+    // debug_print_local_grid(grid, rank, "Final");
+    
     // Cleanup
     MPI_Comm_free(&cart_comm);
     MPI_Finalize();
     
     return 0;
 }
+

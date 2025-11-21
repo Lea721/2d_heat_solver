@@ -1,0 +1,7 @@
+cd ~/2d_heat_solver && chmod +x scripts/build.sh && ./scripts/build.sh && ./build/heat_solver_serial
+cd ~/2d_heat_solver/visualization
+ python3 plot_results.py
+
+cd ~/2d_heat_solver && chmod +x scripts/*.sh && ./scripts/build_mpi.sh && ./scripts/test_parallel.sh
+ cd ~/2d_heat_solver/visualization
+ python3 plot_results_mpi.py
