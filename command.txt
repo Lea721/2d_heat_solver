@@ -16,3 +16,53 @@ mpirun -np 4 ./build/dirichletVSneuman neumann
 cd visualization
 python3 analysis.py
 python3 visual_check.py
+-------------------------
+run on many pc
+Here’s a clear step-by-step summary to set up and run MPI between two (or more) VMs using a bridged network:
+Step 1: Set up bridged network
+Ensure both VMs are on the same network (check with ip a).
+The master VM must be able to ping the other VM(s):
+ping 10.100.100.101
+Step 2: Test SSH connectivity
+From master VM:
+ssh progparallele@10.100.100.101
+If it asks for a password and logs in, SSH works.
+Step 3: (Optional but recommended) Passwordless SSH
+On master VM, generate SSH keys:
+ssh-keygen -t rsa
+Press Enter for defaults, leave passphrase empty.
+Copy key to friend’s VM:
+ssh-copy-id progparallele@10.100.100.101
+Enter password once.
+Test passwordless login:
+ssh progparallele@10.100.100.101
+Should log in without asking for password.
+Step 4: Prepare MPI hosts file
+On master VM, create hosts file (~/hosts):
+10.100.100.100 slots=2
+10.100.100.101 slots=2
+Adjust slots according to the number of processes you want per VM.
+Add more lines if you have more VMs.
+Step 5: Copy MPI program to all VMs
+Compile program on master VM:
+chmod +x scripts/*.sh
+Copy program and build folder to friend’s VM:
+scp -r ~/Desktop/2d_heat_solver/* progparallele@10.100.100.101:~/Desktop/2d_heat_solver/
+scp -r build/ progparallele@10.100.100.101:~/Desktop/2d_heat_solver/
+Verify files on friend’s VM:
+ssh progparallele@10.100.100.101 "ls -l ~/Desktop/2d_heat_solver/build/"
+Step 6: Run MPI program
+On master VM:
+mpirun -np 4 --hostfile ~/hosts -x DISPLAY= -x XAUTHORITY= ~/Desktop/2d_heat_solver/build/heat_solver_mpi
+-np 4 → total number of MPI processes across all hosts.
+-x DISPLAY= -x XAUTHORITY= → prevents GUI/X issues (optional).
+The program will launch processes across master and friend’s VM.
+✅ Tips for multiple VMs:
+Make sure all VMs have the same folder structure.
+Test SSH for every VM from master VM.
+Use hostname in your MPI code to confirm which process runs on which VM.
+If you want, I can make a visual diagram of the 4-VM MPI setup showing master, slaves, and process distribution—it makes it easier to follow.
+Do you want me to do that?
+ 
+sudo ip addr del 192.168.1.166/24 dev enp0s3
+ 

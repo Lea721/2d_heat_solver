@@ -101,8 +101,8 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
-    const int global_nx = 200;        // Global grid points in x
-    const int global_ny = 200;        // Global grid points in y
+    const int global_nx = 10000;        // Global grid points in x
+    const int global_ny = 10000;        // Global grid points in y
     const double Lx = 1.0;           // Domain length in x
     const double Ly = 1.0;           // Domain length in y
     const double alpha = 0.01;       // Thermal diffusivity
