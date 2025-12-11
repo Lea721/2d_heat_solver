@@ -65,4 +65,39 @@ If you want, I can make a visual diagram of the 4-VM MPI setup showing master, s
 Do you want me to do that?
  
 sudo ip addr del 192.168.1.166/24 dev enp0s3
+ --------------------------------
+ 
+ mpirun --oversubscribe -np 1 ./build/dirichletVSneuman dirichlet > output/strong_1.txt
+mpirun --oversubscribe -np 2 ./build/dirichletVSneuman dirichlet > output/strong_2.txt
+mpirun --oversubscribe -np 4 ./build/dirichletVSneuman dirichlet > output/strong_4.txt
+mpirun --oversubscribe -np 8 ./build/dirichletVSneuman dirichlet > output/strong_8.txt
+mpirun --oversubscribe -np 16 ./build/dirichletVSneuman dirichlet > output/strong_16.txt
+------------------------------
+change nx and ny to 200 then
+mpic++ -std=c++11 -O2 src/dirichletVSneuman.cpp src/heat_solver_mpi_nonblocking.cpp -o build/dirichletVSneuman
+
+mpirun --oversubscribe -np 1 ./build/dirichletVSneuman dirichlet > output/weak_1.txt
+
+then change nx and ny to 400 then recompile then 
+
+mpirun --oversubscribe -np 4 ./build/dirichletVSneuman dirichlet > output/weak_4.txt
+
+then change nx and ny to 800 then recompile then 
+
+mpirun --oversubscribe -np 16 ./build/dirichletVSneuman dirichlet > output/weak_16.txt
+---------------------
+TO RUN WITH OPENGL
+mpic++ -std=c++17 \
+    src/heat_solver_mpi_visual.cpp \
+    src/heat_solver_mpi_nonblocking.cpp \
+    visualizer/visualizer_opengl.cpp \
+    -lglut -lGLU -lGL \
+    -o build/heat_vis
+
+mpirun --oversubscribe -np 4 ./build/heat_vis
+
+------------
+
+mpirun -np 4 --hostfile ~/hosts --map-by node ~/Desktop/2d_heat_solver/build/heat_solver_mpi
+
  

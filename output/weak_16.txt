@@ -1,0 +1,15 @@
+=== PARALLEL 2D HEAT SOLVER ===
+Process grid: 4 x 4
+Global grid: 800 x 800
+Time steps: 500
+Boundary conditions: Dirichlet
+  Left: 100°C, Right: 0°C
+  Top: 50°C, Bottom: 0°C
+MPI Solver: dx=0.00125156, dy=0.00125156, dt=9.79008e-06
+Completed step 100
+Completed step 200
+Completed step 300
+Completed step 400
+Completed step 500
+Simulation completed in 937 ms
+Saved results to results/final_dirichlet.csv

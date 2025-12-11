@@ -1,0 +1,6 @@
+# .gitignore
+results/
+visualization/plots_parallel_nonblocking/
+*.csv
+*.png
+

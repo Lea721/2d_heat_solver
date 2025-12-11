@@ -78,8 +78,8 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
     // Configuration
-    const int global_nx = 100;
-    const int global_ny = 100;
+    const int global_nx = 200;
+    const int global_ny = 200;
     const double Lx = 1.0;
     const double Ly = 1.0;
     const double alpha = 0.01;
