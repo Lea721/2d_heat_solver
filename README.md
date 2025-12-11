@@ -8,7 +8,7 @@ This project implements a 2D heat equation solver with support for serial, MPI p
 ---
 ## Prerequisites
 
-* Linux or macOS environment
+* Linux environment
 * C++11 or C++17 compiler (g++)
 * MPI library (OpenMPI recommended)
 * Python 3.x with `matplotlib` and `numpy`
