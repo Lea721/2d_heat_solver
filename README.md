@@ -1,52 +1,38 @@
-```markdown
+
+---
 # 2D Heat Solver
-**Project:** Parallel 2D Heat Equation Solver with MPI and OpenGL Visualization  
-**Description:**  
-This project implements a 2D heat equation solver supporting serial execution, MPI parallelism, non-blocking MPI communication, and OpenGL visualization. It includes scripts for building, testing, and plotting results, as well as strong and weak scaling experiments.
+**Project:** Parallel 2D Heat Equation Solver with MPI and OpenGL Visualization
+**Description:**
+This project implements a 2D heat equation solver with support for serial, MPI parallel, non-blocking MPI, and OpenGL visualization. It also includes scripts for automated building, testing, and visualization. The code supports strong and weak scaling experiments.
 
 ---
-
-## Table of Contents
-1. [Prerequisites](#prerequisites)  
-2. [Project Structure](#project-structure)  
-3. [Building and Running](#building-and-running)  
-   - [Serial Version](#serial-version)  
-   - [MPI Parallel Version](#mpi-parallel-version)  
-   - [MPI Non-Blocking Version](#mpi-non-blocking-version)  
-   - [Dirichlet vs Neumann Analysis](#dirichlet-vs-neumann-analysis)  
-   - [OpenGL Visualization](#opengl-visualization)  
-4. [Running MPI Across Multiple PCs](#running-mpi-across-multiple-pcs)  
-5. [Scaling Experiments](#scaling-experiments)  
-6. [Tips](#tips)  
-
----
-
 ## Prerequisites
-- Linux or macOS environment  
-- C++11 or C++17 compiler (`g++`)  
-- MPI library (OpenMPI recommended)  
-- Python 3.x with `matplotlib` and `numpy`  
-- OpenGL libraries (`GL`, `GLU`, `glut`) for visualization  
+
+* Linux or macOS environment
+* C++11 or C++17 compiler (g++)
+* MPI library (OpenMPI recommended)
+* Python 3.x with `matplotlib` and `numpy`
+* OpenGL libraries (`GL`, `GLU`, `glut`) for visualization
 
 ---
 
 ## Project Structure
-```
 
+```
 2d_heat_solver/
 ├── src/                    # Source code
 ├── build/                  # Compiled binaries
 ├── scripts/                # Build and test scripts
 ├── visualization/          # Python scripts for plotting
 ├── output/                 # Output files for scaling experiments
-
-````
+```
 
 ---
 
 ## Building and Running
 
 ### Serial Version
+
 ```bash
 cd ~/2d_heat_solver
 chmod +x scripts/build.sh
@@ -55,7 +41,7 @@ chmod +x scripts/build.sh
 
 cd ~/2d_heat_solver/visualization
 python3 plot_results.py
-````
+```
 
 ---
 
@@ -191,14 +177,3 @@ mpirun --oversubscribe -np 16 ./build/dirichletVSneuman dirichlet > output/weak_
 ```
 
 ---
-
-## Tips
-
-* Ensure all VMs have identical folder structures.
-* Test SSH connectivity from master VM to all slave VMs.
-* Use `hostname` in MPI code to confirm process distribution.
-* For OpenGL, pass `-x DISPLAY= -x XAUTHORITY=` when running MPI on multiple nodes to prevent GUI issues.
-
----
-Do you want me to do that?
-```
