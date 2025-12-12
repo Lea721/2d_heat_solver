@@ -24,6 +24,7 @@ This project implements a 2D heat equation solver with support for serial, MPI p
 ├── build/                  # Compiled binaries
 ├── scripts/                # Build and test scripts
 ├── visualization/          # Python scripts for plotting
+├── visualizer/ 
 ├── output/                 # Output files for scaling experiments
 ```
 
